@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>工单管理 · 深大校园设施巡检平台</title>
+    <link rel="stylesheet" href="css/issues.css">
+    <script defer src="js/issue-common.js"></script>
+    <script defer src="js/vendor/echarts.common-5.6.0.min.js"></script>
+    <script defer src="js/issue-charts.js"></script>
+    <script defer src="js/issues.js"></script>
+</head>
+<body class="ledger">
+    <header class="platform-header">
+        <span class="platform-name">深大校园设施巡检平台</span>
+        <nav aria-label="主导航">
+            <a href="index.html">巡检地图</a>
+            <a href="issues.html" aria-current="page">工单管理</a>
+        </nav>
+    </header>
+    <main class="ledger-main">
+        <h1>工单管理</h1>
+        <form id="filters" role="search">
+            <label>搜索工单<input id="search" type="search" placeholder="输入编号、标题或描述"></label>
+            <label>问题类别<select id="category"><option value="">全部类别</option><option value="light">路灯</option><option value="road">道路</option><option value="facility">公共设施</option><option value="other">其他类别</option></select></label>
+            <label>处理状态<select id="status"><option value="">全部状态</option><option value="pending">待处理</option><option value="processing">处理中</option><option value="resolved">已完成</option></select></label>
+            <button type="reset" class="quiet">清除筛选</button>
+        </form>
+        <section class="summary-strip" aria-label="筛选结果概览">
+            <div><span>工单总数</span><strong id="summary-total">—</strong></div>
+            <div><span>待处理</span><strong id="summary-pending">—</strong></div>
+            <div><span>处理中</span><strong id="summary-processing">—</strong></div>
+            <div><span>已完成</span><strong id="summary-resolved">—</strong></div>
+        </section>
+        <div class="chart-grid">
+            <section class="chart-card"><header><h2>工单上报趋势</h2><select id="trend-range" aria-label="上报趋势时间范围"><option value="7">近 7 天</option><option value="30">近 30 天</option></select></header>
+                <div class="chart" id="trend-chart" role="img" aria-label="工单上报趋势">正在加载工单…</div>
+            </section>
+            <section class="chart-card"><header><h2>工单状态分布</h2></header>
+                <div class="chart" id="status-chart" role="img" aria-label="工单状态分布">正在加载工单…</div>
+            </section>
+            <section class="chart-card"><header><h2>工单类别分布</h2></header>
+                <div class="chart" id="category-chart" role="img" aria-label="工单类别分布">正在加载工单…</div>
+            </section>
+            <section class="chart-card"><header><h2>各类别工单数量</h2></header>
+                <div class="chart" id="comparison-chart" role="img" aria-label="各类别工单数量">正在加载工单…</div>
+            </section>
+        </div>
+        <section class="records" aria-label="工单列表">
+            <header><h2>工单列表</h2><span id="count" role="status"></span><button type="button" id="refresh" class="quiet">刷新列表</button></header>
+            <div class="table-scroll">
+                <table>
+                    <thead><tr><th>编号</th><th>工单标题</th><th>类别</th><th>状态</th><th>上报时间</th><th>操作</th></tr></thead>
+                    <tbody id="rows"></tbody>
+                </table>
+            </div>
+            <p id="message" role="status">正在加载工单…</p>
+        </section>
+    </main>
+    <dialog id="details" aria-labelledby="detail-title">
+        <form method="dialog"><button aria-label="关闭详情" class="quiet">关闭</button></form>
+        <p id="detail-id"></p><h2 id="detail-title"></h2>
+        <dl id="detail-fields"></dl>
+        <fieldset id="edit-fields">
+            <label for="edit-description">修改问题描述</label>
+            <textarea id="edit-description" maxlength="2000" rows="3"></textarea>
+            <label for="edit-note">处理说明</label>
+            <textarea id="edit-note" maxlength="2000" rows="2"></textarea>
+            <div class="edit-actions">
+                <button class="quiet" id="save-issue">保存修改</button>
+                <button class="primary-action" id="advance-issue"></button>
+                <button class="quiet danger-action" id="delete-issue">删除模拟工单</button>
+            </div>
+        </fieldset>
+        <p id="edit-result" role="status"></p>
+        <a id="detail-map">地图定位</a>
+    </dialog>
+</body>
+</html>

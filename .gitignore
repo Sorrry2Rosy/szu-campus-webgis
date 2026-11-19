@@ -1,0 +1,39 @@
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local credentials and configuration
+.env
+.env.*
+!.env.example
+.git-credentials
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Runtime databases, backups and logs (keep GIS .dbf source data)
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
+*.log
+
+# Editor, OS and office temporary files
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+~$*
+
+# Optional JavaScript build dependencies
+node_modules/
+dist/

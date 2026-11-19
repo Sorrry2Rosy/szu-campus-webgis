@@ -1,0 +1,514 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>深大校园设施巡检平台</title>
+
+    <!-- Leaflet 地图样式 -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <!-- Bootstrap 样式 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+    <!-- 工单聚合样式 -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+
+    <link rel="stylesheet" href="css/issues.css">
+    <style>
+
+        /* =====================================
+           1. 全局页面布局
+        ===================================== */
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        /* =====================================
+           2. 顶部导航栏
+        ===================================== */
+
+        .topbar {
+            height: 64px;
+            flex-shrink: 0;
+            background-color: white;
+            border-bottom: 1px solid #e6eaf0;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.32);
+        }
+.stats-filter {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.stats-filter:hover {
+    background-color: #eaf2fb;
+}
+
+        /* =====================================
+           3. 主体布局
+        ===================================== */
+
+        .app-main {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            padding: 12px;
+            gap: 12px;
+        }
+        .status-filter {
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.status-filter:hover {
+    background-color: #f1f5f9;
+}
+
+
+        /* =====================================
+           4. 左侧边栏
+        ===================================== */
+
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid #e6eaf0;
+            overflow-y: auto;
+        }
+/* =====================================
+   工单统计面板
+===================================== */
+
+.status-panel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.status-card {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    background-color: #f8fafc;
+    border: 1px solid #e6eaf0;
+    border-radius: 8px;
+    gap: 6px;
+}
+
+.status-card span {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.status-card strong {
+    font-size: 24px;
+    font-weight: 700;
+    color: #334155;
+}
+
+/* 不同状态使用不同颜色 */
+
+.status-card:nth-child(2) strong {
+    color: #e74c3c;
+}
+
+.stat-card:nth-child(3) strong {
+    color: #f39c12;
+}
+
+.status-card:nth-child(4) strong {
+    color: #27ae60;
+}
+
+        .sidebar h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #206bc4;
+            margin-bottom: 24px;
+        }
+
+        .sidebar h2 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #344054;
+            margin-bottom: 12px;
+        }
+
+
+        /* =====================================
+           5. 地图区域
+        ===================================== */
+
+        #map {
+            flex: 1;
+            height: 100%;
+            border: 1px solid #e6eaf0;
+            border-radius: 8px;
+        }
+
+        .leaflet-popup-content {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+
+        /* =====================================
+           6. 图层控制
+        ===================================== */
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 10px;
+            gap: 10px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .layer-zoom-hint { margin-left: auto; color: #596d7a; font-size: 11px; }
+        .campus-place-name {
+            text-align: center; white-space: nowrap; line-height: 20px;
+            font: 600 12px/20px system-ui, "Microsoft YaHei", sans-serif;
+            color: #344d54;
+            text-shadow: -1px -1px 1px white, 1px -1px 1px white,
+                          -1px 1px 1px white, 1px 1px 1px white;
+            pointer-events: none;
+        }
+
+        .layer-item:hover {
+            background-color: #f1f5f9;
+        }
+
+
+        /* =====================================
+           7. 选点坐标
+        ===================================== */
+
+        #coord-panel {
+            padding: 10px;
+            background-color: #f8fafc;
+            border: 1px solid #e6eaf0;
+            border-radius: 6px;
+            font-size: 16px;
+            color: #475569;
+            line-height: 1.8;
+        }
+
+
+        /* =====================================
+           8. 报修表单
+        ===================================== */
+
+        #report-form {
+            margin-top: 16px;
+        }
+
+        #report-form h5 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #206bc4;
+        }
+
+        #report-form label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        #report-form input,
+        #report-form select,
+        #report-form textarea {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        #submit-issue {
+            margin-top: 12px;
+            width: 100%;
+        }
+
+
+        /* =====================================
+           9. 工单状态图例
+        ===================================== */
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 6px 8px;
+        }
+
+
+        /* =====================================
+           10. 工单详情弹窗
+        ===================================== */
+
+        .issue-popup {
+            min-width: 220px;
+        }
+
+        .issue-popup h5 {
+            color: #206bc4;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .issue-popup p {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+    <!-- =====================================
+         一、顶部导航栏
+    ====================================== -->
+
+    <header class="platform-header">
+        <span class="platform-name">深大校园设施巡检平台</span>
+        <nav aria-label="主导航">
+            <a href="index.html" aria-current="page">巡检地图</a>
+            <a href="issues.html">工单管理</a>
+        </nav>
+    </header>
+
+
+    <!-- =====================================
+         二、页面主体
+    ====================================== -->
+
+    <main class="app-main">
+
+
+        <!-- =================================
+             左侧边栏
+        ================================== -->
+
+        <aside class="sidebar">
+
+            <h1>深大校园设施巡检</h1>
+            <p id="location-notice" role="status" hidden></p>
+            <!-- 工单统计面板 -->
+<h2>工单统计</h2>
+
+<div class="status-panel">
+    <!-- 工单总数 -->
+<div class="status-card stats-filter" data-status="all">
+    <span>工单总数</span>
+    <strong id="total-count">0</strong>
+</div>
+
+<!-- 待处理 -->
+<div class="status-card stats-filter" data-status="pending">
+    <span>待处理</span>
+    <strong id="pending-count">0</strong>
+</div>
+
+<!-- 处理中 -->
+<div class="status-card stats-filter" data-status="processing">
+    <span>处理中</span>
+    <strong id="processing-count">0</strong>
+</div>
+
+<!-- 已完成 -->
+<div class="status-card stats-filter" data-status="resolved">
+    <span>已完成</span>
+    <strong id="resolved-count">0</strong>
+</div>
+</div>
+
+
+
+            <!-- 1. 图层控制 -->
+
+            <h2>图层控制</h2>
+
+            <div id="layer-panel">
+                <button
+                    id="reset-map-btn"
+                    class="btn btn-outline-primary w-100 mb-3">
+
+                    <i class="bi bi-arrows-fullscreen"></i>
+                    回到校园全景
+
+                </button>
+            </div>
+
+
+            <!-- 2. 地图选点 -->
+
+            <h2>选点坐标</h2>
+
+            <div id="coord-panel">
+                未选择
+            </div>
+
+
+            <!-- 3. 报修按钮 -->
+
+            <button
+                id="report-btn"
+                class="btn btn-primary w-100 mt-3"
+                type="button"
+            >
+                登记问题
+            </button>
+
+
+            <!-- 4. 报修表单 -->
+
+            <div id="report-form" style="display: none;">
+
+                <h5>教学模拟工单登记</h5>
+                <label for="issue-source">问题来源</label>
+                <select id="issue-source" class="form-select">
+                    <option value="inspection">巡检登记</option>
+                    <option value="student">师生上报</option>
+                </select>
+
+                <!-- 问题类别 -->
+
+                <label for="issue-category">
+                    问题类别
+                </label>
+
+                <select
+                    id="issue-category"
+                    class="form-select"
+                >
+                    <option value="light">路灯</option>
+                    <option value="road">道路</option>
+                    <option value="facility">公共设施</option>
+                </select>
+
+
+                <!-- 工单标题 -->
+
+                <label for="issue-title">
+                    工单标题
+                </label>
+
+                <input
+                    type="text"
+                    id="issue-title" maxlength="120"
+                    class="form-control"
+                    placeholder="请输入问题标题"
+                >
+
+
+                <!-- 问题描述 -->
+
+                <label for="issue-description">
+                    问题描述
+                </label>
+
+                <textarea
+                    id="issue-description" maxlength="2000"
+                    class="form-control"
+                    rows="4"
+                    placeholder="请详细描述遇到的问题"
+                ></textarea>
+
+
+                <label for="issue-location">位置描述（选填）</label>
+                <input id="issue-location" maxlength="200" placeholder="例如：教学楼东门">
+                <div id="nearby-result" role="status" aria-live="polite"></div>
+                <!-- 提交按钮 -->
+
+                <button
+                    type="button"
+                    id="submit-issue"
+                    class="btn btn-primary"
+                >
+                    提交工单
+                </button>
+
+            </div>
+
+
+            <!-- 5. 工单状态图例 -->
+
+            <h2 class="mt-4">工单状态</h2>
+
+            <div class="status-item status-filter" data-status="pending">
+    <span class="badge text-bg-danger">待处理</span>
+    <span>pending</span>
+</div>
+
+<div class="status-item status-filter" data-status="processing">
+    <span class="badge text-bg-warning">处理中</span>
+    <span>processing</span>
+</div>
+
+<div class="status-item status-filter" data-status="resolved">
+    <span class="badge text-bg-success">已完成</span>
+    <span>resolved</span>
+</div>
+
+        </aside>
+
+
+        <!-- =================================
+             右侧地图
+        ================================== -->
+
+        <div id="map"></div>
+
+    </main>
+
+
+    <!-- =====================================
+         三、JavaScript 外部库
+    ====================================== -->
+
+    <!-- Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <!-- 项目自己的地图代码 -->
+    <script src="js/issue-common.js"></script>
+    <script src="js/map.js"></script>
+
+    
+
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+* text=auto
+*.docx binary
+*.shp binary
+*.shx binary
+*.dbf binary
+*.sbn binary
+*.sbx binary
+*.mxd binary
